@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Inventario - Inicio de Sesión</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <!--contenedor del formulario-->
+  <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Sistema de Inventario</h1>
+    <form id="login-form" class="space-y-6">
+      <!--campo usuario-->
+      <div>
+        <label for="username" class="block text-sm font-medium text-gray-700">Usuario</label>
+        <input id="username" name="username" type="text" required
+          class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          placeholder="Ingresa tu usuario">
+      </div>
+
+      <!--campo contraseña-->
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+        <input id="password" name="password" type="password" required
+          class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          placeholder="Ingresa tu contraseña">
+      </div>
+
+      <!--botón iniciar sesión-->
+      <button type="submit"
+        class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none">
+        Iniciar Sesión
+      </button>
+    </form>
+
+    <!--enlace de ayuda o registro-->
+    <p class="mt-4 text-center text-sm text-gray-600">
+      ¿No tienes una cuenta? <a href="#" class="text-indigo-600 hover:underline">Regístrate aquí</a>.
+    </p>
+  </div>
+
+  <!--archivos JS-->
+  <script src="./js/api.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+</html>
