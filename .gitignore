@@ -1,0 +1,20 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Other project files
+.ruff_cache/
+*.db
+*.sqlite3
+.env
+
+# Editor configs
+.idea/
+.vscode/
