@@ -1,0 +1,26 @@
+[project]
+name = "bd2-hw2-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.13.3",
+    "litestar[jwt,sqlalchemy,standard]>=2.12.1",
+    "psycopg>=3.2.3",
+    "pwdlib[argon2]>=0.2.1",
+    "pydantic-settings>=2.6.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "mypy>=1.13.0",
+    "ruff>=0.7.1",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "T", "ERA"]

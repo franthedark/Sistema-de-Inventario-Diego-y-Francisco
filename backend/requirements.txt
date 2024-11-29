@@ -1,0 +1,4 @@
+litestar
+sqlalchemy
+passlib
+python-3.12
