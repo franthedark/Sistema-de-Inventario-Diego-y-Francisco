@@ -1,26 +1,19 @@
-[project]
-name = "bd2-hw2-project"
+[tool.poetry]
+name = "hw3-bdd2"
 version = "0.1.0"
-description = "Add your description here"
+description = "Sistema de gestión de inventarios, compras y ventas para una tienda"
+authors = ["Tu Nombre <tuemail@example.com>"]
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "alembic>=1.13.3",
-    "litestar[jwt,sqlalchemy,standard]>=2.12.1",
-    "psycopg>=3.2.3",
-    "pwdlib[argon2]>=0.2.1",
-    "pydantic-settings>=2.6.0",
-]
+packages = [{include = "app"}]
 
-[tool.uv]
-dev-dependencies = [
-    "mypy>=1.13.0",
-    "ruff>=0.7.1",
-]
+[tool.poetry.dependencies]
+python = "^3.10"
+litestar = "^0.8.0"
+sqlalchemy = "^2.0.0"
+psycopg2-binary = "^2.9.0"
+alembic = "^1.8.0"
+pydantic = "^1.10.0"
 
-[tool.ruff]
-line-length = 120
-target-version = "py312"
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "N", "T", "ERA"]
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

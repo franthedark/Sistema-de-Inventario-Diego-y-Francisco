@@ -1,11 +1,12 @@
 from datetime import datetime
 
-# Función para calcular las ganancias (precio de venta menos IVA y costo de producto)
-def calculate_profit(price: float, cost: float, iva: float):
-    price_without_iva = price / (1 + iva)
-    profit = price_without_iva - cost
-    return profit
+def parse_date(date_str):
+    """Convierte una cadena de texto a un objeto de fecha"""
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        raise ValueError(f"Fecha inválida: {date_str}. Formato esperado: YYYY-MM-DD")
 
-# Función para formatear fechas
-def format_date(date: datetime):
-    return date.strftime('%Y-%m-%d %H:%M:%S')
+def calculate_total(items, key):
+    """Calcula el total de un campo en una lista de diccionarios"""
+    return sum(item[key] for item in items)

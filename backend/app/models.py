@@ -1,58 +1,63 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey, DateTime, Text
 from datetime import datetime
-from app.database import Base
+from sqlalchemy.orm import relationship, declarative_base
 
-# Modelo de Producto
-class Product(Base):
-    __tablename__ = 'products'
+Base = declarative_base()
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    description = Column(String)
-    price = Column(Float)
-    stock = Column(Integer)
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(50), nullable=False, unique=True)
+    email = Column(String(100), nullable=False, unique=True)
+    hashed_password = Column(String(255), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-# Modelo de Compra
-class Purchase(Base):
-    __tablename__ = 'purchases'
+    # Relaciones si es necesario
+    compras = relationship("Compra", back_populates="user")
+    ventas = relationship("Venta", back_populates="user")
 
-    id = Column(Integer, primary_key=True, index=True)
-    date = Column(DateTime, default=datetime.utcnow)
-    supplier = Column(String)
-    total = Column(Float)
+class Producto(Base):
+    __tablename__ = 'productos'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String(100), nullable=False)
+    descripcion = Column(Text, nullable=True)
+    precio = Column(Float, nullable=False)
+    stock = Column(Integer, nullable=False, default=0)
 
-    products = relationship("PurchaseItem", back_populates="purchase")
+class Compra(Base):
+    __tablename__ = 'compras'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"))  # Relación con el usuario
+    fecha = Column(DateTime, default=datetime.utcnow)
+    proveedor = Column(String(100), nullable=False)
+    detalles = relationship("DetalleCompra", back_populates="compra")
+    user = relationship("User", back_populates="compras")
 
-class PurchaseItem(Base):
-    __tablename__ = 'purchase_items'
+class DetalleCompra(Base):
+    __tablename__ = 'detalles_compra'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    compra_id = Column(Integer, ForeignKey('compras.id'))
+    producto_id = Column(Integer, ForeignKey('productos.id'))
+    cantidad = Column(Integer, nullable=False)
+    precio = Column(Float, nullable=False)
+    compra = relationship("Compra", back_populates="detalles")
+    producto = relationship("Producto")
 
-    id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey('products.id'))
-    quantity = Column(Integer)
-    price = Column(Float)
+class Venta(Base):
+    __tablename__ = 'ventas'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"))  # Relación con el usuario
+    fecha = Column(DateTime, default=datetime.utcnow)
+    detalles = relationship("DetalleVenta", back_populates="venta")
+    user = relationship("User", back_populates="ventas")
 
-    purchase = relationship("Purchase", back_populates="products")
-    product = relationship("Product")
-
-# Modelo de Venta
-class Sale(Base):
-    __tablename__ = 'sales'
-
-    id = Column(Integer, primary_key=True, index=True)
-    date = Column(DateTime, default=datetime.utcnow)
-    total = Column(Float)
-    iva = Column(Float)
-
-    products = relationship("SaleItem", back_populates="sale")
-
-class SaleItem(Base):
-    __tablename__ = 'sale_items'
-
-    id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey('products.id'))
-    quantity = Column(Integer)
-    price = Column(Float)
-
-    sale = relationship("Sale", back_populates="products")
-    product = relationship("Product")
+class DetalleVenta(Base):
+    __tablename__ = 'detalles_venta'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    venta_id = Column(Integer, ForeignKey('ventas.id'))
+    producto_id = Column(Integer, ForeignKey('productos.id'))
+    cantidad = Column(Integer, nullable=False)
+    precio = Column(Float, nullable=False)
+    venta = relationship("Venta", back_populates="detalles")
+    producto = relationship("Producto")
