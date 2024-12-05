@@ -34,6 +34,9 @@ class Compra(Base):
     user = relationship("User", back_populates="compras")
     total = Column(Float, nullable=False, default=0.0)
 
+    total_productos_vendidos = Column(Integer, default=0)  # Para contar productos vendidos
+    total_costo_productos = Column(Float, default=0.0) 
+
 class DetalleCompra(Base):
     __tablename__ = 'detalles_compra'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -52,6 +55,10 @@ class Venta(Base):
     detalles = relationship("DetalleVenta", back_populates="venta")
     user = relationship("User", back_populates="ventas")
     total = Column(Float, nullable=False, default=0)
+
+    total_productos_vendidos = Column(Integer, default=0)  # Para contar productos vendidos
+    total_costo_productos = Column(Float, default=0.0)     # Para contar el costo de los productos
+    ganancias = Column(Float, default=0.0) 
 
 class DetalleVenta(Base):
     __tablename__ = 'detalles_venta'

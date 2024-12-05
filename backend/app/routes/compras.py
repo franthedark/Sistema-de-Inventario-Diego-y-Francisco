@@ -21,35 +21,31 @@ class CompraSchema(BaseModel):
 async def registrar_compra(data: CompraSchema) -> Dict[str, str]:
     """Registra una nueva compra y actualiza el stock"""
     try:
-        # Usar la sesión configurada correctamente
         db: Session = SessionLocal()
 
         fecha_compra = datetime.utcnow()
-
-        # Crear la compra
         compra = Compra(proveedor=data.proveedor, fecha=fecha_compra)
         db.add(compra)
         db.commit()
-        db.refresh(compra)  # Obtener el ID de la compra recién insertada
+        db.refresh(compra)
 
-        detalles_respuesta = []  # Para almacenar los detalles de la respuesta
         total_compra = 0
+        total_productos_vendidos = 0
+        total_costo_productos = 0
 
-        # Procesar cada detalle de la compra
         for detalle in data.detalles:
             producto = db.query(Producto).filter(Producto.id == detalle.producto_id).first()
             if not producto:
                 raise HTTPException(status_code=404, detail=f"Producto con ID {detalle.producto_id} no encontrado")
 
-            # Calcular precio total (precio * cantidad)
             precio_total = producto.precio * detalle.cantidad
             total_compra += precio_total
+            total_productos_vendidos += detalle.cantidad
+            total_costo_productos += producto.precio * detalle.cantidad
 
-            # Actualizar el stock del producto: aumentar el stock por la cantidad comprada
             producto.stock += detalle.cantidad
-            db.commit()  # Guardar la actualización del stock
+            db.commit()
 
-            # Registrar el detalle de la compra
             detalle_compra = DetalleCompra(
                 compra_id=compra.id,
                 producto_id=detalle.producto_id,
@@ -58,40 +54,29 @@ async def registrar_compra(data: CompraSchema) -> Dict[str, str]:
             )
             db.add(detalle_compra)
 
-            # Crear respuesta del detalle
-            detalles_respuesta.append({
-                "producto_id": detalle.producto_id,
-                "producto_nombre": producto.nombre,
-                "cantidad": detalle.cantidad,
-                "precio_total": precio_total,
-                "proveedor": data.proveedor,
-                "fecha": fecha_compra
-            })
-
-        # Actualizar el total de la compra en la tabla 'compras'
         compra.total = total_compra
+        compra.total_productos_vendidos = total_productos_vendidos
+        compra.total_costo_productos = total_costo_productos
         db.commit()
 
-        # Responder con los detalles de la compra
         return {
             "message": "Compra registrada exitosamente",
             "compra_id": compra.id,
-            "detalles": detalles_respuesta,
-            "fecha_compra": fecha_compra,
-            "total_compra": total_compra
+            "total": total_compra,
+            "total_productos_vendidos": total_productos_vendidos,
+            "total_costo_productos": total_costo_productos,
         }
 
     except HTTPException as e:
-        # Manejo de errores específicos
         return {"status_code": e.status_code, "detail": e.detail}
-    
+
     except Exception as e:
-        # Manejo de errores generales
-        db.rollback()  # En caso de error, revertir la transacción
+        db.rollback()
         return {"status_code": 500, "detail": f"Error inesperado: {str(e)}"}
 
     finally:
-        db.close()  # Cerrar la sesión al final
+        db.close()
+
 
 # Router para la ruta /compras
 router = Router(

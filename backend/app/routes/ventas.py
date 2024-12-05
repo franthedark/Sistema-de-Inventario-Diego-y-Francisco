@@ -25,7 +25,6 @@ def calcular_total_venta(detalles: List[DetalleVentaSchema], connection) -> floa
             total += producto.precio * detalle.cantidad
     return total
 
-# Función para registrar la venta
 @post("/")
 async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
     """Registra una nueva venta y actualiza el stock"""
@@ -43,6 +42,8 @@ async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
 
         detalles_respuesta = []  # Para almacenar los detalles de la respuesta
         total_venta = 0
+        total_productos_vendidos = 0
+        ganancias = 0
 
         # Procesar cada detalle de la venta
         for detalle in data.detalles:
@@ -53,6 +54,10 @@ async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
             # Calcular precio total (precio * cantidad)
             precio_total = producto.precio * detalle.cantidad
             total_venta += precio_total
+
+            # Calcular las ganancias (precio - costo)
+            ganancia = producto.precio * detalle.cantidad
+            ganancias += ganancia
 
             # Actualizar el stock del producto: reducir el stock por la cantidad vendida
             if producto.stock < detalle.cantidad:
@@ -78,9 +83,17 @@ async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
                 "fecha": fecha_venta
             })
 
+            # Acumular productos vendidos
+            total_productos_vendidos += detalle.cantidad
+
         # Actualizar el total de la venta en la tabla 'ventas'
         venta.total = total_venta
+        venta.total_productos_vendidos = total_productos_vendidos
+        venta.ganancias = ganancias
         db.commit()
+
+        # Sincronizar los cambios
+        db.refresh(venta)
 
         # Responder con los detalles de la venta
         return {
@@ -88,7 +101,9 @@ async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
             "venta_id": venta.id,
             "detalles": detalles_respuesta,
             "fecha_venta": fecha_venta,
-            "total_venta": total_venta
+            "total_venta": total_venta,
+            "total_productos_vendidos": total_productos_vendidos,
+            "ganancias": ganancias
         }
 
     except HTTPException as e:
@@ -102,6 +117,7 @@ async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
 
     finally:
         db.close()  # Cerrar la sesión al final
+
 
 # Router para la ruta /ventas
 router = Router(

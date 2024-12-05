@@ -10,3 +10,4 @@ def parse_date(date_str):
 def calculate_total(items, key):
     """Calcula el total de un campo en una lista de diccionarios"""
     return sum(item[key] for item in items)
+

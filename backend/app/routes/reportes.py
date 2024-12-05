@@ -1,104 +1,74 @@
-from litestar import Router, get
-from sqlalchemy.orm import Session
-from app.db import SessionLocal
 from app.models import Venta, DetalleVenta, Producto
-from app.utils import parse_date
-from typing import Dict, Any
-from litestar.exceptions import HTTPException
+from app.db import SessionLocal
+from datetime import datetime
+from typing import List, Dict
+from litestar import Router, get
 
-# Suponemos que el IVA es un porcentaje fijo. Se puede ajustar si es necesario.
-IVA_PORCENTAJE = 0.19  # 19% de IVA
+# Función para obtener el reporte de ventas en un rango de fechas
+def generar_reporte_ventas(fecha_inicio: datetime, fecha_fin: datetime) -> Dict[str, float]:
+    db = SessionLocal()  # Nueva sesión para asegurar que obtenemos los datos más recientes
 
-@get("/ventas")
-async def reporte_ventas(fecha_inicio: str, fecha_fin: str) -> Dict[str, Any]:
-    """Genera un reporte de ventas en un rango de fechas"""
     try:
-        # Parsear las fechas recibidas como parámetros
-        fecha_inicio = parse_date(fecha_inicio)
-        fecha_fin = parse_date(fecha_fin)
+        # Consultar las ventas en el rango de fechas
+        ventas = db.query(Venta).filter(Venta.fecha >= fecha_inicio, Venta.fecha <= fecha_fin).all()
 
-        # Verificar que la fecha de inicio no sea mayor que la fecha de fin
-        if fecha_inicio > fecha_fin:
-            return {"error": "La fecha de inicio no puede ser mayor que la fecha de fin"}
+        total_productos_vendidos = 0
+        monto_total_ventas = 0
+        monto_total_ganancias = 0
+        iva_tasa = 0.19  # Suponiendo un IVA del 19%
 
-        with SessionLocal() as session:
-            # Consulta para obtener las ventas dentro del rango de fechas
-            ventas = (
-                session.query(Venta)
-                .filter(Venta.fecha.between(fecha_inicio, fecha_fin))
-                .all()
-            )
+        for venta in ventas:
+            # Asegurarse de que el total de la venta se calcula correctamente
+            print(f"Procesando venta ID {venta.id}, total venta: {venta.total}")  # Log de depuración
 
-            # Depuración: Ver cuántas ventas se encuentran
-            print(f"Ventas encontradas: {len(ventas)}")
-            for venta in ventas:
-                print(f"Venta ID: {venta.id}, Fecha: {venta.fecha}, Detalles: {len(venta.detalles)}")
+            # Iterar sobre los detalles de la venta
+            for detalle in venta.detalles:
+                producto = db.query(Producto).filter(Producto.id == detalle.producto_id).first()
+                if producto:
+                    # Calcular el precio total de la venta (sin IVA)
+                    precio_total = detalle.cantidad * producto.precio
+                    # Calcular el IVA de la venta
+                    iva = precio_total * iva_tasa
+                    # Calcular la ganancia (precio de venta - IVA - costo del producto)
+                    ganancia = (producto.precio - iva) * detalle.cantidad
 
-            total_ventas = 0
-            total_productos_vendidos = 0
-            total_costo_productos = 0
-            total_iva = 0
+                    # Acumular totales
+                    total_productos_vendidos += detalle.cantidad
+                    monto_total_ventas += precio_total
+                    monto_total_ganancias += ganancia
 
-            # Iterar sobre las ventas y sus detalles
-            for venta in ventas:
-                try:
-                    # Calcular el total de la venta usando la lógica del método calcular_total_venta
-                    total_venta = 0
-                    for detalle in venta.detalles:
-                        # Buscar el producto de la venta
-                        producto = session.query(Producto).filter(Producto.id == detalle.producto_id).first()
-                        if not producto:
-                            raise HTTPException(status_code=404, detail=f"Producto con ID {detalle.producto_id} no encontrado")
-
-                        # Calcular el total de la venta (sin IVA)
-                        total_venta += detalle.cantidad * producto.precio
-
-                        # Para cada detalle de la venta, contar los productos y calcular el costo
-                        costo_producto = detalle.cantidad * producto.precio
-                        total_costo_productos += costo_producto
-
-                        # Calcular el IVA para cada producto vendido y acumularlo
-                        iva_producto = costo_producto * IVA_PORCENTAJE
-                        total_iva += iva_producto
-
-                        total_productos_vendidos += detalle.cantidad
-
-                    total_ventas += total_venta
-
-                except Exception as e:
-                    # Manejo de errores para cada venta en caso de que algo falle
-                    print(f"Error al procesar la venta {venta.id}: {e}")
-                    continue  # Saltar al siguiente registro en caso de error
-
-            # **Corregir cálculo de ganancias**: Ganancias = Ventas sin IVA - Costos de productos sin IVA
-            ganancias = total_ventas - total_costo_productos
-            print(f"Ganancias: {ganancias}")
-
-            # Preparar el reporte final con los datos calculados
-            reporte = {
-                "fecha_inicio": fecha_inicio.strftime("%Y-%m-%d"),
-                "fecha_fin": fecha_fin.strftime("%Y-%m-%d"),
-                "total_ventas": total_ventas,
-                "total_productos_vendidos": total_productos_vendidos,
-                "total_iva": total_iva,
-                "total_costo_productos": total_costo_productos,
-                "ganancias": ganancias,
-            }
+        # Generar el reporte con los resultados
+        reporte = {
+            "total_productos_vendidos": total_productos_vendidos,
+            "monto_total_ventas": monto_total_ventas,
+            "monto_total_ganancias": monto_total_ganancias
+        }
 
         return reporte
 
-    except HTTPException as e:
-        # Manejo de excepciones de HTTPException
-        return {"status_code": e.status_code, "detail": e.detail}
-    
     except Exception as e:
-        # Manejo de errores generales
-        return {"status_code": 500, "detail": f"Error inesperado: {str(e)}"}
+        return {"error": str(e)}
 
-# Crear el router con la ruta correspondiente para generar el reporte
+    finally:
+        db.close()
+
+# Endpoint GET para obtener el reporte de ventas
+@get("/reporte-ventas")
+async def obtener_reporte_ventas(fecha_inicio: str, fecha_fin: str) -> Dict[str, float]:
+    # Convertir las fechas de string a datetime
+    try:
+        fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+        fecha_fin = datetime.strptime(fecha_fin, "%Y-%m-%d")
+    except ValueError:
+        return {"error": "Formato de fecha inválido. Usa 'YYYY-MM-DD'."}
+
+    # Llamar a la función que genera el reporte
+    reporte = generar_reporte_ventas(fecha_inicio, fecha_fin)
+
+    return reporte
+
+# Router para las rutas de reportes
 router = Router(
     path="/reportes",
-    route_handlers=[
-        reporte_ventas  # Función que maneja el reporte de ventas
-    ],
+    route_handlers=[obtener_reporte_ventas],
 )
