@@ -1,56 +1,111 @@
 from litestar import Router, post
 from app.models import Venta, DetalleVenta, Producto
-from app.db import SessionLocal
+from app.db import engine, SessionLocal
 from pydantic import BaseModel
-from typing import Dict
+from typing import List, Dict
+from datetime import datetime
+from sqlalchemy import select, insert, update
+from litestar.exceptions import HTTPException
+from sqlalchemy.orm import Session
 
+# Esquema para recibir detalles de la venta
 class DetalleVentaSchema(BaseModel):
     producto_id: int
     cantidad: int
-    precio: float
 
 class VentaSchema(BaseModel):
-    detalles: list[DetalleVentaSchema]
+    detalles: List[DetalleVentaSchema]
 
+# Función para calcular el total de la venta
+def calcular_total_venta(detalles: List[DetalleVentaSchema], connection) -> float:
+    total = 0
+    for detalle in detalles:
+        producto = connection.execute(select(Producto).where(Producto.id == detalle.producto_id)).fetchone()
+        if producto:
+            total += producto.precio * detalle.cantidad
+    return total
+
+# Función para registrar la venta
 @post("/")
 async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
     """Registra una nueva venta y actualiza el stock"""
-    with SessionLocal() as session:
-        venta = Venta()
-        session.add(venta)
-        session.commit()
+    try:
+        # Usar la sesión configurada correctamente
+        db: Session = SessionLocal()
 
+        fecha_venta = datetime.utcnow()
+
+        # Crear la venta
+        venta = Venta(fecha=fecha_venta)
+        db.add(venta)
+        db.commit()
+        db.refresh(venta)  # Obtener el ID de la venta recién insertada
+
+        detalles_respuesta = []  # Para almacenar los detalles de la respuesta
+        total_venta = 0
+
+        # Procesar cada detalle de la venta
         for detalle in data.detalles:
-            producto = session.query(Producto).get(detalle.producto_id)
+            producto = db.query(Producto).filter(Producto.id == detalle.producto_id).first()
             if not producto:
-                return {"error": f"Producto con ID {detalle.producto_id} no encontrado"}
+                raise HTTPException(status_code=404, detail=f"Producto con ID {detalle.producto_id} no encontrado")
 
+            # Calcular precio total (precio * cantidad)
+            precio_total = producto.precio * detalle.cantidad
+            total_venta += precio_total
+
+            # Actualizar el stock del producto: reducir el stock por la cantidad vendida
             if producto.stock < detalle.cantidad:
-                return {"error": f"Stock insuficiente para el producto con ID {detalle.producto_id}"}
-
-            # Actualizar stock
+                raise HTTPException(status_code=400, detail=f"Stock insuficiente para el producto {producto.nombre}")
             producto.stock -= detalle.cantidad
+            db.commit()  # Guardar la actualización del stock
 
             # Registrar el detalle de la venta
             detalle_venta = DetalleVenta(
                 venta_id=venta.id,
                 producto_id=detalle.producto_id,
                 cantidad=detalle.cantidad,
-                precio=detalle.precio
+                precio=producto.precio
             )
-            session.add(detalle_venta)
+            db.add(detalle_venta)
 
-        session.commit()
+            # Crear respuesta del detalle
+            detalles_respuesta.append({
+                "producto_id": detalle.producto_id,
+                "producto_nombre": producto.nombre,
+                "cantidad": detalle.cantidad,
+                "precio_total": precio_total,
+                "fecha": fecha_venta
+            })
 
-    return {"message": "Venta registrada exitosamente"}
+        # Actualizar el total de la venta en la tabla 'ventas'
+        venta.total = total_venta
+        db.commit()
 
-async def calcular_total_venta(venta: Venta) -> float:
-    """Calcula el total de una venta sumando los detalles."""
-    return sum(detalle.cantidad * detalle.precio for detalle in venta.detalles)
+        # Responder con los detalles de la venta
+        return {
+            "message": "Venta registrada exitosamente",
+            "venta_id": venta.id,
+            "detalles": detalles_respuesta,
+            "fecha_venta": fecha_venta,
+            "total_venta": total_venta
+        }
 
+    except HTTPException as e:
+        # Manejo de errores específicos
+        return {"status_code": e.status_code, "detail": e.detail}
+    
+    except Exception as e:
+        # Manejo de errores generales
+        db.rollback()  # En caso de error, revertir la transacción
+        return {"status_code": 500, "detail": f"Error inesperado: {str(e)}"}
+
+    finally:
+        db.close()  # Cerrar la sesión al final
+
+# Router para la ruta /ventas
 router = Router(
     path="/ventas",
-    route_handlers=[
-        registrar_venta  # Ejemplo de función para manejar una venta
-    ],
+    route_handlers=[registrar_venta],
 )
+

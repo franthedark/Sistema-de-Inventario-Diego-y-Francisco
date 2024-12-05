@@ -13,7 +13,7 @@ app = Litestar(
         productos.router,
         compras.router,
         ventas.router,
-        reportes.router,
+        reportes.router
     ],
     on_startup=[startup],  # Registrar el manejador de inicio
 )

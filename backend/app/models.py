@@ -13,7 +13,6 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relaciones si es necesario
     compras = relationship("Compra", back_populates="user")
     ventas = relationship("Venta", back_populates="user")
 
@@ -33,6 +32,7 @@ class Compra(Base):
     proveedor = Column(String(100), nullable=False)
     detalles = relationship("DetalleCompra", back_populates="compra")
     user = relationship("User", back_populates="compras")
+    total = Column(Float, nullable=False, default=0.0)
 
 class DetalleCompra(Base):
     __tablename__ = 'detalles_compra'
@@ -51,6 +51,7 @@ class Venta(Base):
     fecha = Column(DateTime, default=datetime.utcnow)
     detalles = relationship("DetalleVenta", back_populates="venta")
     user = relationship("User", back_populates="ventas")
+    total = Column(Float, nullable=False, default=0)
 
 class DetalleVenta(Base):
     __tablename__ = 'detalles_venta'
