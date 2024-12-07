@@ -1,10 +1,10 @@
 from litestar import Router, post
 from app.models import Venta, DetalleVenta, Producto
-from app.db import engine, SessionLocal
+from app.db import SessionLocal
 from pydantic import BaseModel
 from typing import List, Dict
 from datetime import datetime
-from sqlalchemy import select, insert, update
+from sqlalchemy import select
 from litestar.exceptions import HTTPException
 from sqlalchemy.orm import Session
 
@@ -16,7 +16,6 @@ class DetalleVentaSchema(BaseModel):
 class VentaSchema(BaseModel):
     detalles: List[DetalleVentaSchema]
 
-# Función para calcular el total de la venta
 def calcular_total_venta(detalles: List[DetalleVentaSchema], connection) -> float:
     total = 0
     for detalle in detalles:
@@ -29,7 +28,6 @@ def calcular_total_venta(detalles: List[DetalleVentaSchema], connection) -> floa
 async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
     """Registra una nueva venta y actualiza el stock"""
     try:
-        # Usar la sesión configurada correctamente
         db: Session = SessionLocal()
 
         fecha_venta = datetime.utcnow()
@@ -38,14 +36,13 @@ async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
         venta = Venta(fecha=fecha_venta)
         db.add(venta)
         db.commit()
-        db.refresh(venta)  # Obtener el ID de la venta recién insertada
+        db.refresh(venta)
 
-        detalles_respuesta = []  # Para almacenar los detalles de la respuesta
+        detalles_respuesta = []
         total_venta = 0
         total_productos_vendidos = 0
         ganancias = 0
 
-        # Procesar cada detalle de la venta
         for detalle in data.detalles:
             producto = db.query(Producto).filter(Producto.id == detalle.producto_id).first()
             if not producto:
@@ -54,21 +51,17 @@ async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
             if not producto.estado:
                 raise HTTPException(status_code=404, detail=f"Producto con ID {detalle.producto_id} deshabilitado")
 
-            # Calcular precio total (precio * cantidad)
             precio_total = producto.precio * detalle.cantidad
             total_venta += precio_total
 
-            # Calcular las ganancias (precio - costo)
             ganancia = producto.precio * detalle.cantidad
             ganancias += ganancia
 
-            # Actualizar el stock del producto: reducir el stock por la cantidad vendida
             if producto.stock < detalle.cantidad:
                 raise HTTPException(status_code=400, detail=f"Stock insuficiente para el producto {producto.nombre}")
             producto.stock -= detalle.cantidad
-            db.commit()  # Guardar la actualización del stock
+            db.commit()  
 
-            # Registrar el detalle de la venta
             detalle_venta = DetalleVenta(
                 venta_id=venta.id,
                 producto_id=detalle.producto_id,
@@ -77,7 +70,6 @@ async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
             )
             db.add(detalle_venta)
 
-            # Crear respuesta del detalle
             detalles_respuesta.append({
                 "producto_id": detalle.producto_id,
                 "producto_nombre": producto.nombre,
@@ -86,7 +78,6 @@ async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
                 "fecha": fecha_venta
             })
 
-            # Acumular productos vendidos
             total_productos_vendidos += detalle.cantidad
 
         # Actualizar el total de la venta en la tabla 'ventas'
@@ -110,19 +101,17 @@ async def registrar_venta(data: VentaSchema) -> Dict[str, str]:
         }
 
     except HTTPException as e:
-        # Manejo de errores específicos
         return {"status_code": e.status_code, "detail": e.detail}
     
     except Exception as e:
-        # Manejo de errores generales
-        db.rollback()  # En caso de error, revertir la transacción
+        db.rollback()  
         return {"status_code": 500, "detail": f"Error inesperado: {str(e)}"}
 
     finally:
-        db.close()  # Cerrar la sesión al final
+        db.close() 
 
 
-# Router para la ruta /ventas
+
 router = Router(
     path="/ventas",
     route_handlers=[registrar_venta],

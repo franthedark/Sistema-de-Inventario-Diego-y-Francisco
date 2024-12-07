@@ -1,14 +1,12 @@
 from litestar import Router, post
 from app.models import Compra, DetalleCompra, Producto
-from app.db import engine, SessionLocal
+from app.db import SessionLocal
 from pydantic import BaseModel
 from typing import List, Dict
 from datetime import datetime
-from sqlalchemy import select, insert, update
 from sqlalchemy.orm import Session
 from litestar.exceptions import HTTPException
 
-# Esquemas para recibir los datos de la compra
 class DetalleCompraSchema(BaseModel):
     producto_id: int
     cantidad: int
@@ -81,7 +79,6 @@ async def registrar_compra(data: CompraSchema) -> Dict[str, str]:
         db.close()
 
 
-# Router para la ruta /compras
 router = Router(
     path="/compras",
     route_handlers=[registrar_compra],

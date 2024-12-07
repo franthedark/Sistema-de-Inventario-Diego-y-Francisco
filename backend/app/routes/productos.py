@@ -3,7 +3,6 @@ from app.models import Producto
 from app.db import SessionLocal
 from typing import List, Dict, Any
 from pydantic import BaseModel
-from typing import List, Dict
 
 class ProductoSchema(BaseModel):
     nombre: str

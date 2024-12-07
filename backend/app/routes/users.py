@@ -1,12 +1,11 @@
-from litestar import Router, post, get, put, delete, Request
+from litestar import Router, post, put, Request
 from app.models import User
 from app.db import SessionLocal
-from typing import List, Dict, Any
+from typing import Dict, Any
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext  # Para manejar el hash de contraseñas
+from passlib.context import CryptContext  
 
-# Definición del esquema de datos para crear un usuario y actualizar la información
 class UserSchema(BaseModel):
     username: str
     email: str
@@ -20,7 +19,6 @@ class LoginSchema(BaseModel):
     username: str
     password: str
 
-# Inicializamos el contexto para el hash de contraseñas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Función para encriptar contraseñas
@@ -31,7 +29,6 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-# Register: Registrar un nuevo usuario
 @post("/register")
 async def register(data: UserSchema) -> Dict[str, Any]:
     """Registrar un nuevo usuario."""
@@ -44,7 +41,6 @@ async def register(data: UserSchema) -> Dict[str, Any]:
         session.refresh(user)
     return {"message": "Usuario registrado", "user": data.dict()}
 
-# Login: Iniciar sesión de un usuario
 @post("/login")
 async def login(data: LoginSchema) -> Dict[str, Any]:
     """Iniciar sesión del usuario."""
@@ -54,14 +50,11 @@ async def login(data: LoginSchema) -> Dict[str, Any]:
             return {"message": "Inicio de sesión exitoso", "user": {"id": user.id, "username": user.username}}
         return {"message": "Credenciales incorrectas"}, 401
 
-# Logout: Cerrar sesión (implementar según la lógica de sesión)
 @post("/logout")
 async def logout(request: Request) -> Dict[str, Any]:
     """Cerrar sesión del usuario."""
-    # Aquí se puede agregar la lógica de invalidar tokens o sesiones
     return {"message": "Sesión cerrada correctamente"}
 
-# Deshabilitar usuario: Marcar un usuario como inactivo
 @put("/disable")
 async def disable_user(user_id: int) -> Dict[str, Any]:
     """Deshabilitar (inactivar) un usuario."""
@@ -73,7 +66,6 @@ async def disable_user(user_id: int) -> Dict[str, Any]:
             return {"message": f"Usuario {user_id} deshabilitado correctamente"}
         return {"message": "Usuario no encontrado"}, 404
 
-# Cambiar contraseña de usuario
 @put("/change_password")
 async def change_password(user_id: int, new_password: str) -> Dict[str, Any]:
     """Cambiar la contraseña de un usuario."""
