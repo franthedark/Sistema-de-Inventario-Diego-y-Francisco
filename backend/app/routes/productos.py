@@ -34,7 +34,7 @@ async def listar_productos() -> List[Dict[str, Any]]:
         productos = session.query(Producto).all()  # Obtener todos los productos
     # Convertir los productos a un formato serializable
     return [
-        {"id": p.id, "nombre": p.nombre, "descripcion": p.descripcion, "precio": p.precio, "stock": p.stock}
+        {"id": p.id, "nombre": p.nombre, "descripcion": p.descripcion, "precio": p.precio, "stock": p.stock, "estado": p.estado}
         for p in productos
     ]
 
