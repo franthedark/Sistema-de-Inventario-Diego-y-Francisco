@@ -23,6 +23,8 @@ class Producto(Base):
     descripcion = Column(Text, nullable=True)
     precio = Column(Float, nullable=False)
     stock = Column(Integer, nullable=False, default=0)
+    imagen = Column(String(255), nullable=True)
+    estado = Column(Boolean, default=True)
 
 class Compra(Base):
     __tablename__ = 'compras'
@@ -33,9 +35,6 @@ class Compra(Base):
     detalles = relationship("DetalleCompra", back_populates="compra")
     user = relationship("User", back_populates="compras")
     total = Column(Float, nullable=False, default=0.0)
-
-    total_productos_vendidos = Column(Integer, default=0)  # Para contar productos vendidos
-    total_costo_productos = Column(Float, default=0.0) 
 
 class DetalleCompra(Base):
     __tablename__ = 'detalles_compra'

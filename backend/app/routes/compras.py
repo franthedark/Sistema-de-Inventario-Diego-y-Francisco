@@ -37,6 +37,9 @@ async def registrar_compra(data: CompraSchema) -> Dict[str, str]:
             producto = db.query(Producto).filter(Producto.id == detalle.producto_id).first()
             if not producto:
                 raise HTTPException(status_code=404, detail=f"Producto con ID {detalle.producto_id} no encontrado")
+            
+            if not producto.estado:
+                raise HTTPException(status_code=404, detail=f"Producto con ID {detalle.producto_id} deshabilitado")
 
             precio_total = producto.precio * detalle.cantidad
             total_compra += precio_total

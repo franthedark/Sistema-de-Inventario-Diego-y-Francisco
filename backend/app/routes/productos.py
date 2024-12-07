@@ -1,4 +1,4 @@
-from litestar import Router, post, get
+from litestar import Router, post, get, put, Request
 from app.models import Producto
 from app.db import SessionLocal
 from typing import List, Dict, Any
@@ -10,6 +10,8 @@ class ProductoSchema(BaseModel):
     descripcion: str
     precio: float
     stock: int
+    imagen: str = None
+    estado: bool = True
 
     class Config:
         orm_mode = True
@@ -36,9 +38,29 @@ async def listar_productos() -> List[Dict[str, Any]]:
         for p in productos
     ]
 
+@put("/")
+async def cambiar_estado_producto(request: Request, producto_id: int) -> Dict[str, any]:
+    """Cambia el estado de un producto (activar/deshabilitar)."""
+    
+    if not producto_id:
+        return {"message": "El parámetro 'producto_id' es requerido"}
+    
+    with SessionLocal() as session:
+        # Buscar el producto por ID
+        producto = session.query(Producto).filter(Producto.id == producto_id).first()
+        
+        if not producto:
+            return {"message": "Producto no encontrado"}
+        
+        # Alternar el estado del producto
+        producto.estado = not producto.estado  # Cambiar el estado de True a False o viceversa
+        session.commit()  # Confirmar los cambios
+        session.refresh(producto)  # Refrescar la instancia del producto
+        
+    return {"message": f"Producto {'activado' if producto.estado else 'deshabilitado'} correctamente.", "producto_id": producto.id}
 
 # Configurar el router para manejar las rutas de productos
 router = Router(
     path="/productos",
-    route_handlers=[listar_productos, crear_producto],  # Añadimos la nueva ruta
+    route_handlers=[listar_productos, crear_producto, cambiar_estado_producto],  # Añadimos la nueva ruta
 )
