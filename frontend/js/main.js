@@ -25,7 +25,5 @@ async function logout() {
     console.error("Error durante el logout:", error);
     alert("Ocurrió un problema al cerrar sesión.");
   }
-});
-}
 //logout
 document.getElementById("logout-button").addEventListener("click", logout);
