@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000"; //hay que poner la url del back
+const API_URL = "http://127.0.0.1:8000"; //hay que poner la url del back
 
 //función iniciar sesion
 async function login(username, password) {
