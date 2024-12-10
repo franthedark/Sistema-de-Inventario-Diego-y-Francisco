@@ -21,9 +21,17 @@
   <main class="flex-grow container mx-auto px-4 py-6">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold">Productos</h2>
-      <button id="add-product-btn" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">
-        + Agregar Producto
-      </button>
+      <div class="flex space-x-4">
+        <button id="add-product-btn" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">
+          + Agregar Producto
+        </button>
+        <button id="add-transaction-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+          Registrar Compra/Venta
+        </button>
+        <button id="generate-report-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded">
+          Generar Reporte de Ventas
+        </button>
+      </div>
     </div>
 
     <!--tabla de productos-->
@@ -44,46 +52,45 @@
       </table>
     </div>
   </main>
-  
-<!--boton agregar producto-->
-<button id="add-product-btn" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">
-  + Agregar Producto
-</button>
 
-<!--modal para agregar productos-->
-<div id="product-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-  <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
-    <h2 class="text-xl font-bold mb-4">Agregar Producto</h2>
-    <form id="add-product-form" class="space-y-4">
-      <div>
-        <label for="product-name" class="block text-sm font-medium text-gray-700">Nombre</label>
-        <input id="product-name" name="name" type="text" required
-          class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-      </div>
-      <div>
-        <label for="product-description" class="block text-sm font-medium text-gray-700">Descripción</label>
-        <textarea id="product-description" name="description" rows="3" required
-          class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
-      </div>
-      <div>
-        <label for="product-price" class="block text-sm font-medium text-gray-700">Precio</label>
-        <input id="product-price" name="price" type="number" step="0.01" required
-          class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-      </div>
-      <div>
-        <label for="product-stock" class="block text-sm font-medium text-gray-700">Stock</label>
-        <input id="product-stock" name="stock" type="number" required
-          class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-      </div>
-      <div class="flex justify-end space-x-4">
-        <button type="button" id="cancel-btn"
-          class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">Cancelar</button>
-        <button type="submit"
-          class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">Guardar</button>
-      </div>
-    </form>
+  <!--modal para registrar compras y ventas-->
+  <div id="transaction-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+      <h2 class="text-xl font-bold mb-4">Registrar Transacción</h2>
+      <form id="transaction-form" class="space-y-4">
+        <div>
+          <label for="product" class="block text-sm font-medium text-gray-700">Producto</label>
+          <select id="product" name="product" class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></select>
+        </div>
+        <div>
+          <label for="quantity" class="block text-sm font-medium text-gray-700">Cantidad</label>
+          <input id="quantity" name="quantity" type="number" required
+            class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Tipo de Transacción</label>
+          <div class="flex items-center space-x-4">
+            <label class="inline-flex items-center">
+              <input type="radio" name="transaction-type" value="compra" class="form-radio" required>
+              <span class="ml-2">Compra</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input type="radio" name="transaction-type" value="venta" class="form-radio" required>
+              <span class="ml-2">Venta</span>
+            </label>
+          </div>
+        </div>
+        <div class="flex justify-end space-x-4">
+          <button type="button" id="cancel-transaction" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">Cancelar</button>
+          <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Registrar</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
+
+  <!--modal para agregar productos-->
+  <div id="product-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+  </div>
 
   <!--scripts-->
   <script src="./js/api.js"></script>
