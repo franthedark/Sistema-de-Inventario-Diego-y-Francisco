@@ -1,6 +1,6 @@
-const API_URL = "http://127.0.0.1:8000"; //hay que poner la url del back
+const API_URL = "http://127.0.0.1:8000"; //URL del backend
 
-//función iniciar sesion
+//funcion iniciar sesion
 async function login(username, password) {
   try {
     const response = await fetch(`${API_URL}/login`, {
@@ -30,7 +30,7 @@ async function getProducts() {
   const token = localStorage.getItem("token");
   const response = await fetch(`${API_URL}/products`, {
     headers: {
-      Authorization: `Bearer ${token}`, //incluye el token para la autenticación
+      Authorization: `Bearer ${token}`, //incluye el token para la autenticacion
     },
   });
 
@@ -48,7 +48,7 @@ async function addProduct(product) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`, // Incluye el token
+      Authorization: `Bearer ${token}`, //incluye el token
     },
     body: JSON.stringify(product),
   });
@@ -56,6 +56,63 @@ async function addProduct(product) {
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Error al agregar el producto");
+  }
+
+  return response.json();
+}
+
+//funcion registrar una transaccion (compra o venta)
+async function addTransaction(transaction) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/ventas`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, //incluye el token
+    },
+    body: JSON.stringify(transaction),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Error al registrar la transacción");
+  }
+
+  return response.json();
+}
+
+//funcion generar reporte de ventas
+async function generateSalesReport() {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/reportes/ventas`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`, //incluye el token
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al generar el reporte de ventas.");
+  }
+
+  return response.blob(); //retorna el archivo como blob
+}
+
+//funcion registrar una compra
+async function addPurchase(purchase) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/compras`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, //incluye el token
+    },
+    body: JSON.stringify(purchase),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Error al registrar la compra");
   }
 
   return response.json();
