@@ -1,41 +1,53 @@
-//selecciona el formulario y anade un manejador de eventos
-document.getElementById("login-form").addEventListener("submit", async (event) => {
-  event.preventDefault(); //evita el envío del formulario por defecto
+import { login, getProducts } from "./api.js";
 
-  //captura los valores del formulario
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+// Evento para manejar el formulario de inicio de sesión
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const errorMessage = document.getElementById("error-message");
+
+  // Reinicia el mensaje de error
+  errorMessage.textContent = "";
+  errorMessage.classList.add("hidden");
 
   try {
-    const result = await login(username, password); //llama a la funcion de login desde api.js
-    alert("Inicio de sesión exitoso"); //muestra un mensaje de exito
-    window.location.href = "dashboard.html"; //redirige al panel principal
+    const data = await login(username, password);
+    alert(data.message || "Inicio de sesión exitoso.");
+    window.location.href = "dashboard.html"; // Redirige al dashboard
   } catch (error) {
-    alert(`Error: ${error.message}`); //muestra un mensaje de error al usuario
-    console.error("Error durante el inicio de sesión:", error);
+    console.error("Error en el login:", error.message);
+    errorMessage.textContent = error.message;
+    errorMessage.classList.remove("hidden");
   }
 });
+
 
 // Función para manejar el logout
 async function logout() {
   try {
-    // envia solicitud al endpoint de logout del backend
-    const response = await fetch('/api/logout', {
-      method: 'POST',
-      credentials: 'include', //incluye cookies en la solicitud
-    });
-
-    if (response.ok) {
-      alert("Sesión cerrada exitosamente.");
-      window.location.href = "index.html"; //redirige al inicio de sesion
-    } else {
-      alert("Error al cerrar sesión.");
-    }
+    localStorage.removeItem("token"); // Elimina el token del almacenamiento local
+    alert("Sesión cerrada exitosamente.");
+    window.location.href = "index.html"; // Redirige al inicio de sesión
   } catch (error) {
     alert("Ocurrió un problema al cerrar sesión.");
     console.error("Error durante el logout:", error);
   }
 }
 
-//anade el evento al boton de logout
+// Añade el evento al botón de logout
 document.getElementById("logout-button").addEventListener("click", logout);
+
+// Verifica si el usuario está autenticado al cargar productos
+document.addEventListener("DOMContentLoaded", () => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    alert("No estás autenticado. Inicia sesión.");
+    window.location.href = "index.html";
+  } else {
+    loadProducts(); // Cargar los productos
+  }
+});
+

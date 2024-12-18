@@ -1,9 +1,9 @@
 const API_URL = "http://127.0.0.1:8000"; //URL del backend
 
-//funcion iniciar sesion
-async function login(username, password) {
+// Función iniciar sesión
+export async function login(username, password) {
   try {
-    const response = await fetch(`${API_URL}/login`, {
+    const response = await fetch(`${API_URL}/users/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -17,34 +17,50 @@ async function login(username, password) {
     }
 
     const data = await response.json();
-    localStorage.setItem("token", data.token); //guarda el token
-    return data;
+
+    // Almacenar el token si es necesario
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+    }
+
+    return data; // Devuelve los datos para manejarlos en el frontend
   } catch (error) {
     console.error("Error en login:", error.message);
-    throw error;
+    throw new Error("No se pudo conectar al servidor. Inténtalo de nuevo más tarde.");
   }
 }
 
-//funcion obtener productos
+
+// Función obtener productos
 async function getProducts() {
   const token = localStorage.getItem("token");
-  const response = await fetch(`${API_URL}/products`, {
+
+  if (!token) {
+    throw new Error("No se encontró el token de autenticación.");
+  }
+
+  const response = await fetch(`${API_URL}/productos`, {
     headers: {
-      Authorization: `Bearer ${token}`, //incluye el token para la autenticacion
+      Authorization: `Bearer ${token}`, // Incluye el token para la autenticación
     },
   });
 
   if (!response.ok) {
-    throw new Error("No se pudieron cargar los productos.");
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Error al obtener productos");
   }
 
-  return response.json();
+  return await response.json();
 }
+
+// Exportar las funciones
+export { login, getProducts };
+
 
 //funcion agregar un producto
 async function addProduct(product) {
   const token = localStorage.getItem("token");
-  const response = await fetch(`${API_URL}/products`, {
+  const response = await fetch(`${API_URL}/productos`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -84,7 +100,7 @@ async function addTransaction(transaction) {
 //funcion generar reporte de ventas
 async function generateSalesReport() {
   const token = localStorage.getItem("token");
-  const response = await fetch(`${API_URL}/reportes/ventas`, {
+  const response = await fetch(`${API_URL}/reportes/reporte-ventas`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`, //incluye el token
