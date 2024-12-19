@@ -81,7 +81,7 @@
           </div>
         </div>
         <div class="flex justify-end space-x-4">
-          <button type="button" id="cancel-transaction" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">Cancelar</button>
+          <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="toggleModal('transaction-modal')">Cancelar</button>
           <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Registrar</button>
         </div>
       </form>
@@ -90,9 +90,36 @@
 
   <!--modal para agregar productos-->
   <div id="product-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+      <h2 class="text-xl font-bold mb-4">Agregar Producto</h2>
+      <form id="product-form" class="space-y-4">
+        <div>
+          <label for="product-name" class="block text-sm font-medium text-gray-700">Nombre</label>
+          <input id="product-name" name="product-name" type="text" required
+            class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        <div class="flex justify-end space-x-4">
+          <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="toggleModal('product-modal')">Cancelar</button>
+          <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">Agregar</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!--scripts-->
+  <script>
+    // Alternar visibilidad del modal
+    function toggleModal(modalId) {
+      const modal = document.getElementById(modalId);
+      modal.classList.toggle('hidden');
+    }
+
+    // Mostrar el modal de agregar producto
+    document.getElementById('add-product-btn').addEventListener('click', () => toggleModal('product-modal'));
+
+    // Mostrar el modal de registrar transacción
+    document.getElementById('add-transaction-btn').addEventListener('click', () => toggleModal('transaction-modal'));
+  </script>
   <script src="./js/api.js"></script>
   <script src="./js/dashboard.js"></script>
 </body>
