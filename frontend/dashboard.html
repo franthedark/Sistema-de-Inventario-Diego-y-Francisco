@@ -5,11 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Sistema de Inventario</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
-  <!--navbar-->
+  <!-- Navbar -->
   <nav class="bg-indigo-600 text-white px-4 py-3 shadow-lg">
     <div class="container mx-auto flex justify-between items-center">
       <h1 class="text-lg font-bold">Sistema de Inventario</h1>
@@ -17,7 +16,7 @@
     </div>
   </nav>
 
-  <!--contenido principal-->
+  <!-- Contenido principal -->
   <main class="flex-grow container mx-auto px-4 py-6">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold">Productos</h2>
@@ -34,7 +33,7 @@
       </div>
     </div>
 
-    <!--tabla de productos-->
+    <!-- Tabla de productos -->
     <div class="overflow-x-auto bg-white rounded-lg shadow">
       <table class="min-w-full border-collapse">
         <thead>
@@ -47,13 +46,48 @@
           </tr>
         </thead>
         <tbody id="product-table">
-          <!--las filas de los productos se generan dinamicamente-->
+          <!-- Las filas de los productos se generan dinámicamente -->
         </tbody>
       </table>
     </div>
   </main>
 
-  <!--modal para registrar compras y ventas-->
+  <!-- Modal para agregar productos -->
+  <div id="product-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+      <h2 class="text-xl font-bold mb-4">Agregar Producto</h2>
+      <form id="product-form" class="space-y-4">
+        <div>
+          <label for="product-name" class="block text-sm font-medium text-gray-700">Nombre</label>
+          <input id="product-name" name="product-name" type="text" required
+            class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        <div>
+          <label for="product-description" class="block text-sm font-medium text-gray-700">Descripción</label>
+          <textarea id="product-description" name="product-description" required
+            class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+        </div>
+        <div>
+          <label for="product-price" class="block text-sm font-medium text-gray-700">Precio</label>
+          <input id="product-price" name="product-price" type="number" required
+            class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        <div>
+          <label for="product-stock" class="block text-sm font-medium text-gray-700">Stock</label>
+          <input id="product-stock" name="product-stock" type="number" required
+            class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        <div class="flex justify-end space-x-4">
+          <button type="button" id="cancel-btn" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">
+            Cancelar
+          </button>
+          <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">Agregar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal para registrar compras/ventas -->
   <div id="transaction-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
     <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
       <h2 class="text-xl font-bold mb-4">Registrar Transacción</h2>
@@ -81,46 +115,16 @@
           </div>
         </div>
         <div class="flex justify-end space-x-4">
-          <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="toggleModal('transaction-modal')">Cancelar</button>
+          <button type="button" id="cancel-transaction" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">
+            Cancelar
+          </button>
           <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Registrar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!--modal para agregar productos-->
-  <div id="product-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-    <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
-      <h2 class="text-xl font-bold mb-4">Agregar Producto</h2>
-      <form id="product-form" class="space-y-4">
-        <div>
-          <label for="product-name" class="block text-sm font-medium text-gray-700">Nombre</label>
-          <input id="product-name" name="product-name" type="text" required
-            class="mt-1 block w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-        <div class="flex justify-end space-x-4">
-          <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded" onclick="toggleModal('product-modal')">Cancelar</button>
-          <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">Agregar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!--scripts-->
-  <script>
-    // Alternar visibilidad del modal
-    function toggleModal(modalId) {
-      const modal = document.getElementById(modalId);
-      modal.classList.toggle('hidden');
-    }
-
-    // Mostrar el modal de agregar producto
-    document.getElementById('add-product-btn').addEventListener('click', () => toggleModal('product-modal'));
-
-    // Mostrar el modal de registrar transacción
-    document.getElementById('add-transaction-btn').addEventListener('click', () => toggleModal('transaction-modal'));
-  </script>
-  <script src="./js/api.js"></script>
+  <!-- Scripts -->
   <script src="./js/dashboard.js"></script>
 </body>
 </html>
