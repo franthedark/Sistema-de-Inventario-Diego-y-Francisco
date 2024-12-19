@@ -152,3 +152,59 @@ async function loadProductOptions() {
     alert("No se pudieron cargar las opciones de productos.");
   }
 }
+
+// Nueva función para manejar las transacciones (compra/venta)
+async function handleTransaction(transactionData) {
+  const token = localStorage.getItem("token");
+
+  try {
+    const response = await fetch(`${API_URL}/${transactionData.type === "venta" ? "ventas" : "compras"}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(transactionData),
+    });
+
+    // Validar el estado de la respuesta
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Error en la respuesta del servidor:", errorData);
+      throw new Error(errorData.message || "Error al procesar la transacción");
+    }
+
+    const result = await response.json();
+    console.log("Respuesta del servidor:", result);
+
+    alert(`${transactionData.type === "venta" ? "Venta" : "Compra"} registrada exitosamente`);
+    
+    // Recargar los productos para reflejar el stock actualizado
+    await loadProducts();
+  } catch (error) {
+    console.error("Error en la transacción:", error.message);
+    alert("Hubo un problema al registrar la transacción. Inténtalo de nuevo.");
+  }
+}
+
+
+// Modificar el evento del formulario de transacciones
+document.getElementById("transaction-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const productId = document.getElementById("product").value;
+  const quantity = parseInt(document.getElementById("quantity").value, 10);
+  const transactionType = document.querySelector('input[name="transaction-type"]:checked').value;
+
+  if (!productId || !quantity || !transactionType) {
+    alert("Por favor, completa todos los campos.");
+    return;
+  }
+
+  const transactionData = {
+    type: transactionType,
+    detalles: [{ producto_id: productId, cantidad: quantity }],
+  };
+
+  await handleTransaction(transactionData);
+});
